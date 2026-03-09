@@ -1,14 +1,8 @@
 import { motion } from "framer-motion";
-import { Brain, Coins, FileText, Zap, TrendingUp, Clock } from "lucide-react";
+import { Brain, Coins, FileText, Zap, TrendingUp, Clock, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-
-const stats = [
-  { label: "Tokens Disponíveis", value: "50", icon: Coins, color: "text-accent" },
-  { label: "Trabalhos Criados", value: "0", icon: FileText, color: "text-primary" },
-  { label: "Perguntas Hoje", value: "0 / 5", icon: Brain, color: "text-primary" },
-  { label: "Plano Atual", value: "FREE", icon: TrendingUp, color: "text-accent" },
-];
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const quickActions = [
   { title: "AI Tutor", desc: "Faça uma pergunta", icon: Brain, to: "/app/tutor" },
@@ -18,17 +12,39 @@ const quickActions = [
 ];
 
 const Dashboard = () => {
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const stats = [
+    { label: "Tokens Disponíveis", value: String(profile?.tokens ?? 0), icon: Coins, color: "text-accent" },
+    { label: "Perguntas Hoje", value: `${profile?.questions_today ?? 0} / 5`, icon: Brain, color: "text-primary" },
+    { label: "Plano Atual", value: (profile?.plan ?? "free").toUpperCase(), icon: TrendingUp, color: "text-accent" },
+    { label: "Status", value: profile?.status === "active" ? "Ativo" : "Inativo", icon: FileText, color: "text-primary" },
+  ];
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <motion.div
+        className="flex items-center justify-between"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl md:text-3xl font-heading font-bold mb-1">Olá, Estudante! 👋</h1>
-        <p className="text-muted-foreground">O que vamos estudar hoje?</p>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-heading font-bold mb-1">
+            Olá, {profile?.name || "Estudante"}! 👋
+          </h1>
+          <p className="text-muted-foreground">O que vamos estudar hoje?</p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={handleSignOut}>
+          <LogOut className="w-4 h-4 mr-2" /> Sair
+        </Button>
       </motion.div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s, i) => (
           <motion.div
@@ -47,7 +63,6 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Quick Actions */}
       <div>
         <h2 className="font-heading font-semibold text-lg mb-4">Ações Rápidas</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -71,7 +86,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Upgrade CTA */}
       <motion.div
         className="rounded-xl bg-gradient-card border border-primary/20 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
         initial={{ opacity: 0 }}

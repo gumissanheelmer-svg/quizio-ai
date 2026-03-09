@@ -1,17 +1,28 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCap, ArrowRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement with Supabase Auth
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      navigate("/app");
+    }
   };
 
   return (
@@ -56,8 +67,8 @@ const Login = () => {
                 required
               />
             </div>
-            <Button variant="glow" type="submit" className="w-full">
-              Entrar <ArrowRight className="w-4 h-4 ml-1" />
+            <Button variant="glow" type="submit" className="w-full" disabled={loading}>
+              {loading ? "Entrando..." : <>Entrar <ArrowRight className="w-4 h-4 ml-1" /></>}
             </Button>
           </form>
 
