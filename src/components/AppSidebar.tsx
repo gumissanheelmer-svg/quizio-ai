@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Brain,
   FileText,
@@ -13,10 +14,14 @@ import {
   BookOpen,
   ClipboardList,
   FileDown,
+  Shield,
+  ShoppingCart,
+  UsersRound,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
 import { GraduationCap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
