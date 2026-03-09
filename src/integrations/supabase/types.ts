@@ -91,6 +91,7 @@ export type Database = {
           name: string
           phone: string | null
           plan: string
+          plan_expires_at: string | null
           questions_reset_at: string
           questions_today: number
           status: string
@@ -105,6 +106,7 @@ export type Database = {
           name?: string
           phone?: string | null
           plan?: string
+          plan_expires_at?: string | null
           questions_reset_at?: string
           questions_today?: number
           status?: string
@@ -119,6 +121,7 @@ export type Database = {
           name?: string
           phone?: string | null
           plan?: string
+          plan_expires_at?: string | null
           questions_reset_at?: string
           questions_today?: number
           status?: string
@@ -127,6 +130,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          current_uses: number
+          duration_days: number | null
+          id: string
+          max_uses: number | null
+          plan: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          current_uses?: number
+          duration_days?: number | null
+          id?: string
+          max_uses?: number | null
+          plan: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          current_uses?: number
+          duration_days?: number | null
+          id?: string
+          max_uses?: number | null
+          plan?: string
+        }
+        Relationships: []
+      }
+      promo_redemptions: {
+        Row: {
+          id: string
+          promo_code_id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          promo_code_id: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          promo_code_id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_members: {
         Row: {
@@ -313,6 +378,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      redeem_promo_code: {
+        Args: { p_code: string; p_user_id: string }
+        Returns: string
       }
     }
     Enums: {
