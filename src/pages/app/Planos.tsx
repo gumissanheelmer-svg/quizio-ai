@@ -43,16 +43,32 @@ const plans = [
 const Planos = () => {
   const { profile } = useAuth();
 
+  const planExpiry = profile?.plan_expires_at
+    ? new Date(profile.plan_expires_at)
+    : null;
+  const isExpired = planExpiry ? planExpiry < new Date() : false;
+  const currentPlan = isExpired ? "FREE" : (profile?.plan ?? "free").toUpperCase();
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
         <h1 className="text-2xl font-heading font-bold">Planos</h1>
         <p className="text-sm text-muted-foreground">Escolha o melhor plano para seus estudos</p>
+        {currentPlan !== "FREE" && planExpiry && !isExpired && (
+          <p className="text-xs text-accent mt-1">
+            Plano {currentPlan} ativo até {planExpiry.toLocaleDateString("pt-BR")}
+          </p>
+        )}
+        {currentPlan !== "FREE" && !planExpiry && (
+          <p className="text-xs text-accent mt-1">
+            Plano {currentPlan} — Vitalício ✨
+          </p>
+        )}
       </motion.div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {plans.map((plan, i) => {
-          const isCurrent = profile?.plan?.toUpperCase() === plan.name;
+          const isCurrent = currentPlan === plan.name;
           return (
             <motion.div
               key={plan.name}
@@ -107,6 +123,15 @@ const Planos = () => {
             </motion.div>
           );
         })}
+      </div>
+
+      <div className="text-center">
+        <p className="text-sm text-muted-foreground">
+          Tem um código promocional?{" "}
+          <Link to="/app/tokens" className="text-primary hover:underline">
+            Resgate aqui
+          </Link>
+        </p>
       </div>
     </div>
   );
