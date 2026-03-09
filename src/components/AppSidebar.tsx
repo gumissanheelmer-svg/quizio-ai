@@ -85,9 +85,23 @@ function SidebarSection({ label, items, collapsed }: { label: string; items: typ
   );
 }
 
+const adminItems = [
+  { title: "Admin Dashboard", url: "/app/admin", icon: Shield },
+  { title: "Vendas", url: "/app/admin/vendas", icon: ShoppingCart },
+  { title: "Estudantes", url: "/app/admin/estudantes", icon: UsersRound },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
+  const { user } = useAuth();
   const collapsed = state === "collapsed";
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" })
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
 
   return (
     <Sidebar collapsible="icon">
@@ -103,6 +117,7 @@ export function AppSidebar() {
         <SidebarSection label="Principal" items={mainItems} collapsed={collapsed} />
         <SidebarSection label="Ferramentas" items={toolItems} collapsed={collapsed} />
         <SidebarSection label="Conta" items={accountItems} collapsed={collapsed} />
+        {isAdmin && <SidebarSection label="Admin" items={adminItems} collapsed={collapsed} />}
       </SidebarContent>
     </Sidebar>
   );
