@@ -59,6 +59,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          phone: string | null
           plan: string
           questions_reset_at: string
           questions_today: number
@@ -72,6 +73,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          phone?: string | null
           plan?: string
           questions_reset_at?: string
           questions_today?: number
@@ -85,12 +87,128 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          phone?: string | null
           plan?: string
           questions_reset_at?: string
           questions_today?: number
           status?: string
           tokens?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      room_members: {
+        Row: {
+          id: string
+          role: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_members_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          room_id: string
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          room_id: string
+          status?: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          room_id?: string
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_tasks_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          id: string
+          leader_id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          leader_id: string
+          name?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          leader_id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      token_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          tokens: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          tokens: number
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          tokens?: number
+          type?: string
           user_id?: string
         }
         Relationships: []
@@ -109,6 +227,39 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      works: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          title: string
+          tokens_used: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          title?: string
+          tokens_used?: number
+          type?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          title?: string
+          tokens_used?: number
+          type?: string
           user_id?: string
         }
         Relationships: []
