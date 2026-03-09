@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, Upload, ImageIcon, Brain, FileText, BookOpen, ClipboardList, Lightbulb, Presentation, CheckCircle } from "lucide-react";
+import { Send, Brain, FileText, BookOpen, ClipboardList, Lightbulb, Presentation, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { streamChat } from "@/lib/streamChat";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
@@ -21,11 +23,33 @@ const modes = [
 ];
 
 const AiTutor = () => {
+  const { profile, refreshProfile } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [mode, setMode] = useState("professor");
   const [isLoading, setIsLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history
+  useEffect(() => {
+    const loadHistory = async () => {
+      const { data } = await supabase
+        .from("chat_messages")
+        .select("role, message, mode")
+        .order("created_at", { ascending: true })
+        .limit(100);
+
+      if (data && data.length > 0) {
+        setMessages(data.map(m => ({ role: m.role as "user" | "assistant", content: m.message })));
+        if (data[data.length - 1].mode) {
+          setMode(data[data.length - 1].mode);
+        }
+      }
+      setHistoryLoaded(true);
+    };
+    loadHistory();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -34,8 +58,13 @@ const AiTutor = () => {
   const send = async () => {
     const text = input.trim();
     if (!text || isLoading) return;
-    setInput("");
 
+    if ((profile?.tokens ?? 0) < 10) {
+      toast.error("Tokens insuficientes! Você precisa de pelo menos 10 tokens.");
+      return;
+    }
+
+    setInput("");
     const userMsg: Msg = { role: "user", content: text };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
@@ -57,7 +86,10 @@ const AiTutor = () => {
         messages: [...messages, userMsg],
         mode,
         onDelta: upsertAssistant,
-        onDone: () => setIsLoading(false),
+        onDone: () => {
+          setIsLoading(false);
+          refreshProfile(); // Refresh token count
+        },
       });
     } catch (e: any) {
       toast.error(e.message || "Erro ao conectar com a IA");
@@ -71,17 +103,27 @@ const AiTutor = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] max-w-4xl mx-auto">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4">
-        <h1 className="text-2xl font-heading font-bold">AI Tutor</h1>
-        <p className="text-sm text-muted-foreground">Seu assistente de estudos inteligente</p>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold">AI Tutor</h1>
+          <p className="text-sm text-muted-foreground">Seu assistente de estudos inteligente</p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-heading font-bold text-accent">{profile?.tokens ?? 0} tokens</p>
+          <p className="text-xs text-muted-foreground">5 tokens/pergunta</p>
+        </div>
       </motion.div>
 
       <div ref={scrollRef} className="flex-1 overflow-auto space-y-4 pr-2 mb-4">
-        {messages.length === 0 && (
+        {!historyLoaded ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
             Escolha um modo e faça sua pergunta!
           </div>
-        )}
+        ) : null}
         {messages.map((m, i) => (
           <motion.div
             key={i}
