@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,11 +19,50 @@ const modePrompts: Record<string, string> = {
   analise_imagem: "Você é um analisador de imagens acadêmicas. Analise a imagem fornecida e explique o conteúdo detalhadamente. Responda em português.",
 };
 
+const TOKENS_PER_QUESTION = 5;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Missing authorization header");
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get user from JWT
+    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
+    if (authError || !user) throw new Error("Unauthorized");
+
     const { messages, mode = "professor" } = await req.json();
+
+    // Check tokens
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tokens")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!profile || profile.tokens < TOKENS_PER_QUESTION) {
+      return new Response(JSON.stringify({ error: "Tokens insuficientes. Você precisa de pelo menos 5 tokens." }), {
+        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Save user message
+    const lastUserMsg = messages[messages.length - 1];
+    await supabase.from("chat_messages").insert({
+      user_id: user.id,
+      role: "user",
+      message: lastUserMsg.content,
+      mode,
+      tokens_used: 0,
+    });
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -51,11 +91,6 @@ serve(async (req) => {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const t = await response.text();
       console.error("AI gateway error:", status, t);
       return new Response(JSON.stringify({ error: "Erro no serviço de IA" }), {
@@ -63,7 +98,69 @@ serve(async (req) => {
       });
     }
 
-    return new Response(response.body, {
+    // We need to collect the full response to save it, while still streaming to client
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+
+    // Process stream in background
+    (async () => {
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = "";
+      let buffer = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          // Forward raw chunk to client
+          await writer.write(value);
+
+          // Extract content for saving
+          let newlineIndex: number;
+          while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+            let line = buffer.slice(0, newlineIndex);
+            buffer = buffer.slice(newlineIndex + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) fullContent += content;
+            } catch { /* skip */ }
+          }
+        }
+
+        // Save assistant message and debit tokens
+        await supabase.from("chat_messages").insert({
+          user_id: user.id,
+          role: "assistant",
+          message: fullContent,
+          mode,
+          tokens_used: TOKENS_PER_QUESTION,
+        });
+
+        // Debit tokens using the secure function
+        await supabase.rpc("debit_tokens", {
+          p_user_id: user.id,
+          p_amount: TOKENS_PER_QUESTION,
+          p_description: `AI Tutor - modo ${mode}`,
+        });
+      } catch (e) {
+        console.error("Stream processing error:", e);
+      } finally {
+        await writer.close();
+      }
+    })();
+
+    return new Response(readable, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
