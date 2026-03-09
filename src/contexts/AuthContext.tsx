@@ -10,6 +10,7 @@ interface Profile {
   avatar_url: string | null;
   tokens: number;
   plan: string;
+  plan_expires_at: string | null;
   questions_today: number;
   status: string;
 }
