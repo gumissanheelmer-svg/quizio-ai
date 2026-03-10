@@ -8,6 +8,9 @@ export interface Student {
   name: string;
   plan: string;
   tokens: number;
+  questions_today?: number;
+  status?: string;
+  plan_expires_at?: string | null;
 }
 
 interface AuthContextType {
