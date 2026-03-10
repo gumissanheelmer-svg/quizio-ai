@@ -126,7 +126,7 @@ const AiTutor = () => {
     }
 
     const ext = file.name.split(".").pop();
-    const path = `${profile.user_id}/${Date.now()}.${ext}`;
+    const path = `${user!.id}/${Date.now()}.${ext}`;
 
     try {
       const { error: uploadError } = await supabase.storage.from("chat-files").upload(path, file);
