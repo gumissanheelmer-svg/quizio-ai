@@ -1,13 +1,39 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FileText, Download, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const MeusTrabalhos = () => {
-  // Placeholder – will be connected to DB once documents are saved
-  const trabalhos: { id: string; title: string; type: string; date: string }[] = [];
+  const { profile } = useAuth();
+  const [trabalhos, setTrabalhos] = useState<{ id: string; title: string; type: string; date: string }[]>([]);
+
+  useEffect(() => {
+    const fetchWorks = async () => {
+      if (!profile) return;
+      // Filtro: student_id = usuário logado
+      const { data } = await supabase
+        .from("works" as any)
+        .select("id, title, type, created_at")
+        .eq("student_id", profile.id)
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        setTrabalhos(data.map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          type: t.type,
+          date: new Date(t.created_at).toLocaleDateString("pt-BR")
+        })));
+      }
+    };
+    fetchWorks();
+  }, [profile]);
 
   return (
+
     <div className="max-w-4xl mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-heading font-bold">Meus Trabalhos</h1>

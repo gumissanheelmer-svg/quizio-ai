@@ -32,24 +32,38 @@ const AiTutor = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Load chat history
-  useEffect(() => {
-    const loadHistory = async () => {
-      const { data } = await supabase
-        .from("chat_messages")
-        .select("role, message, mode")
-        .order("created_at", { ascending: true })
-        .limit(100);
+  const loadHistory = async () => {
+    if (!profile) return;
+    try {
+      // chamar RPC: get_chat_history parâmetro: student = id do usuário
+      const { data, error } = await supabase.rpc("get_chat_history" as any, {
+        student: profile.id,
+      });
 
-      if (data && data.length > 0) {
-        setMessages(data.map(m => ({ role: m.role as "user" | "assistant", content: m.message })));
-        if (data[data.length - 1].mode) {
-          setMode(data[data.length - 1].mode);
+      if (error) throw error;
+
+      if (data && Array.isArray(data)) {
+        // order messages by created_at (assuming it might need sorting, or already sorted by DB)
+        const sorted = data.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        setMessages(sorted.map((m: any) => ({ role: m.role as "user" | "assistant", content: m.message })));
+        if (sorted.length > 0 && sorted[sorted.length - 1].mode) {
+           setMode(sorted[sorted.length - 1].mode);
         }
       }
+    } catch (err: any) {
+      console.error("Error loading history:", err);
+    } finally {
       setHistoryLoaded(true);
-    };
-    loadHistory();
-  }, []);
+    }
+  };
+
+  useEffect(() => {
+    if (profile) {
+      loadHistory();
+    } else {
+      setHistoryLoaded(true);
+    }
+  }, [profile]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -57,42 +71,41 @@ const AiTutor = () => {
 
   const send = async () => {
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading || !profile) return;
 
+    // 1 verificar saldo de tokens no estado do usuário
     if ((profile?.tokens ?? 0) < 10) {
-      toast.error("Tokens insuficientes! Você precisa de pelo menos 10 tokens.");
+      toast.error("Tokens insuficientes");
       return;
     }
 
     setInput("");
     const userMsg: Msg = { role: "user", content: text };
+    
+    // Após enviar mensagem: inserir mensagem na interface imediatamente.
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
 
-    let assistantSoFar = "";
-    const upsertAssistant = (chunk: string) => {
-      assistantSoFar += chunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === "assistant") {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
-        }
-        return [...prev, { role: "assistant", content: assistantSoFar }];
-      });
-    };
-
     try {
-      await streamChat({
-        messages: [...messages, userMsg],
-        mode,
-        onDelta: upsertAssistant,
-        onDone: () => {
-          setIsLoading(false);
-          refreshProfile(); // Refresh token count
-        },
+      // 2 chamar função RPC: process_chat_message
+      const { data, error } = await supabase.rpc("process_chat_message" as any, {
+        student: profile.id,
+        user_message: text,
+        chat_mode: mode,
       });
+
+      // 3 se retorno status = error mostrar erro
+      if (error) throw error;
+      if (data?.status === "error") throw new Error(data.message || "Erro no processamento");
+
+      // 4 se retorno status = ok continuar fluxo do chat
+      // Depois carregar histórico usando RPC: get_chat_history
+      await loadHistory();
+      refreshProfile(); // Atualizar saldo após cada mensagem enviada.
+      
     } catch (e: any) {
       toast.error(e.message || "Erro ao conectar com a IA");
+    } finally {
       setIsLoading(false);
     }
   };

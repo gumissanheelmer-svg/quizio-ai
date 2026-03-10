@@ -3,22 +3,17 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
-interface Profile {
+export interface Student {
   id: string;
-  user_id: string;
   name: string;
-  avatar_url: string | null;
-  tokens: number;
   plan: string;
-  plan_expires_at: string | null;
-  questions_today: number;
-  status: string;
+  tokens: number;
 }
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  profile: Profile | null;
+  profile: Student | null; // keep profile variable to not break other components, but object is student
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -37,16 +32,27 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
+    // "buscar registro da tabela students."
     const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
+      .from("students" as any)
+      .select("id, name, plan, tokens")
+      .eq("id", userId) // assuming the student ID matches the auth user ID based on "quando estudante fizer login"
       .single();
-    setProfile(data as Profile | null);
+    if (data) {
+        setProfile(data as Student);
+    } else {
+        // Fallback or error handling if student is not found
+        const { data: profileData } = await supabase.from("profiles").select("id:user_id, name, plan, tokens").eq("user_id", userId).single();
+        if (profileData) {
+            setProfile(profileData as Student);
+        } else {
+            setProfile(null);
+        }
+    }
   };
 
   const refreshProfile = async () => {
@@ -60,7 +66,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (_event, session) => {
         setSession(session);
         if (session?.user) {
-          // Use setTimeout to avoid Supabase deadlock
           setTimeout(() => fetchProfile(session.user.id), 0);
         } else {
           setProfile(null);

@@ -74,6 +74,7 @@ const Tokens = () => {
         tokens: selectedPkg.tokens,
         payment_method: paymentMethod,
         transaction_code: code,
+        status: "pending",
       });
       if (error) {
         if (error.code === "23505") toast.error("Este código de transação já foi utilizado");
