@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(data as Student);
     } else {
         // Fallback or error handling if student is not found
-        const { data: profileData } = await supabase.from("profiles").select("id:user_id, name, plan, tokens").eq("user_id", userId).single();
+        const { data: profileData } = await supabase.from("profiles").select("id:user_id, name, plan, tokens, questions_today, status, plan_expires_at").eq("user_id", userId).single();
         if (profileData) {
             setProfile(profileData as Student);
         } else {
