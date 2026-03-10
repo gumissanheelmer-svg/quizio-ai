@@ -1,53 +1,41 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Send, Brain, FileText, BookOpen, ClipboardList, Lightbulb, Presentation, CheckCircle, Loader2 } from "lucide-react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { streamChat } from "@/lib/streamChat";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
-import ReactMarkdown from "react-markdown";
+import { ToolsMenu, ModeBadge, tools, type ToolMode } from "@/components/ai-tutor/ToolsMenu";
+import { ChatMessages, type Msg } from "@/components/ai-tutor/ChatMessages";
 
-type Msg = { role: "user" | "assistant"; content: string };
-
-const modes = [
-  { value: "professor", label: "Professor", icon: Brain },
-  { value: "trabalho", label: "Trabalho", icon: FileText },
-  { value: "resumo", label: "Resumo", icon: BookOpen },
-  { value: "simulado", label: "Simulado", icon: ClipboardList },
-  { value: "explicacao", label: "Explicação Simples", icon: Lightbulb },
-  { value: "slides", label: "Criar Slides", icon: Presentation },
-  { value: "revisao", label: "Revisão de Trabalho", icon: CheckCircle },
-];
+const defaultMode = "professor";
 
 const AiTutor = () => {
   const { profile, refreshProfile } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState("professor");
+  const [mode, setMode] = useState(defaultMode);
+  const [activeTool, setActiveTool] = useState<ToolMode | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load chat history
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     if (!profile) return;
     try {
-      // chamar RPC: get_chat_history parâmetro: student = id do usuário
       const { data, error } = await supabase.rpc("get_chat_history" as any, {
         student: profile.id,
       });
-
       if (error) throw error;
-
       if (data && Array.isArray(data)) {
-        // order messages by created_at (assuming it might need sorting, or already sorted by DB)
-        const sorted = data.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        const sorted = data.sort(
+          (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
         setMessages(sorted.map((m: any) => ({ role: m.role as "user" | "assistant", content: m.message })));
         if (sorted.length > 0 && sorted[sorted.length - 1].mode) {
-           setMode(sorted[sorted.length - 1].mode);
+          setMode(sorted[sorted.length - 1].mode);
         }
       }
     } catch (err: any) {
@@ -55,15 +43,12 @@ const AiTutor = () => {
     } finally {
       setHistoryLoaded(true);
     }
-  };
+  }, [profile]);
 
   useEffect(() => {
-    if (profile) {
-      loadHistory();
-    } else {
-      setHistoryLoaded(true);
-    }
-  }, [profile]);
+    if (profile) loadHistory();
+    else setHistoryLoaded(true);
+  }, [profile, loadHistory]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -73,36 +58,28 @@ const AiTutor = () => {
     const text = input.trim();
     if (!text || isLoading || !profile) return;
 
-    // 1 verificar saldo de tokens no estado do usuário
     if ((profile?.tokens ?? 0) < 10) {
       toast.error("Tokens insuficientes");
       return;
     }
 
+    const activeMode = activeTool?.value || mode;
     setInput("");
-    const userMsg: Msg = { role: "user", content: text };
-    
-    // Após enviar mensagem: inserir mensagem na interface imediatamente.
-    setMessages(prev => [...prev, userMsg]);
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
     setIsLoading(true);
 
     try {
-      // 2 chamar função RPC: process_chat_message
       const { data, error } = await supabase.rpc("process_chat_message" as any, {
         student: profile.id,
         user_message: text,
-        chat_mode: mode,
+        chat_mode: activeMode,
       });
 
-      // 3 se retorno status = error mostrar erro
       if (error) throw error;
       if (data?.status === "error") throw new Error(data.message || "Erro no processamento");
 
-      // 4 se retorno status = ok continuar fluxo do chat
-      // Depois carregar histórico usando RPC: get_chat_history
       await loadHistory();
-      refreshProfile(); // Atualizar saldo após cada mensagem enviada.
-      
+      refreshProfile();
     } catch (e: any) {
       toast.error(e.message || "Erro ao conectar com a IA");
     } finally {
@@ -111,11 +88,70 @@ const AiTutor = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
   };
+
+  const handleToolSelect = (tool: ToolMode) => {
+    setActiveTool(tool);
+    setMode(tool.value);
+  };
+
+  const handleRemoveTool = () => {
+    setActiveTool(null);
+    setMode(defaultMode);
+  };
+
+  const handleFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const onFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast.error("Arquivo muito grande (máx. 10MB)");
+      return;
+    }
+
+    const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp",
+      "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    if (!allowed.includes(file.type)) {
+      toast.error("Formato não suportado. Use PDF, imagem ou Word.");
+      return;
+    }
+
+    const ext = file.name.split(".").pop();
+    const path = `${profile.user_id}/${Date.now()}.${ext}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage.from("chat-files").upload(path, file);
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(path);
+      const fileUrl = urlData.publicUrl;
+
+      setInput(`[Arquivo: ${file.name}]\n${fileUrl}`);
+      setActiveTool(tools.find((t) => t.value === "upload") || null);
+      setMode("upload");
+      toast.success("Arquivo carregado!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao carregar arquivo");
+    }
+
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const placeholder = activeTool?.placeholder || "Digite sua pergunta...";
 
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] max-w-4xl mx-auto">
+      {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold">AI Tutor</h1>
@@ -127,80 +163,39 @@ const AiTutor = () => {
         </div>
       </motion.div>
 
-      <div ref={scrollRef} className="flex-1 overflow-auto space-y-4 pr-2 mb-4">
-        {!historyLoaded ? (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-            Escolha um modo e faça sua pergunta!
-          </div>
-        ) : null}
-        {messages.map((m, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${
-              m.role === "user"
-                ? "bg-primary text-primary-foreground"
-                : "bg-gradient-card border border-border"
-            }`}>
-              {m.role === "assistant" ? (
-                <div className="prose prose-invert prose-sm max-w-none">
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
-                </div>
-              ) : m.content}
-            </div>
-          </motion.div>
-        ))}
-        {isLoading && messages[messages.length - 1]?.role === "user" && (
-          <div className="flex justify-start">
-            <div className="bg-gradient-card border border-border rounded-xl px-4 py-3">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Messages */}
+      <ChatMessages ref={scrollRef} messages={messages} isLoading={isLoading} historyLoaded={historyLoaded} />
 
-      <div className="border border-border rounded-xl bg-gradient-card p-3 space-y-3">
-        <div className="flex items-center gap-2">
-          <Select value={mode} onValueChange={setMode}>
-            <SelectTrigger className="w-[180px] h-9 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {modes.map(m => (
-                <SelectItem key={m.value} value={m.value}>
-                  <span className="flex items-center gap-2">
-                    <m.icon className="w-3.5 h-3.5" /> {m.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-2">
+      {/* Input bar */}
+      <div className="border border-border rounded-xl bg-gradient-card p-3">
+        <div className="flex items-end gap-2">
+          <ToolsMenu onSelect={handleToolSelect} onFileUpload={handleFileUpload} />
+
+          {activeTool && <ModeBadge tool={activeTool} onRemove={handleRemoveTool} />}
+
           <Textarea
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Digite sua pergunta..."
-            className="min-h-[44px] max-h-32 resize-none text-sm"
+            placeholder={placeholder}
+            className="min-h-[40px] max-h-32 resize-none text-sm flex-1"
             rows={1}
           />
-          <Button onClick={send} disabled={isLoading || !input.trim()} size="icon" className="shrink-0 self-end">
+
+          <Button onClick={send} disabled={isLoading || !input.trim()} size="icon" className="shrink-0 h-9 w-9">
             <Send className="w-4 h-4" />
           </Button>
         </div>
       </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
+        onChange={onFileSelected}
+      />
     </div>
   );
 };
