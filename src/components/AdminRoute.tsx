@@ -1,7 +1,7 @@
 import { useEffect, useState, ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { Loader2 } from "lucide-react";
 
 const AdminRoute = ({ children }: { children: ReactNode }) => {

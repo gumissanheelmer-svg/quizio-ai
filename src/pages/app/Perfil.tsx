@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
 const Perfil = () => {
@@ -67,10 +67,6 @@ const Perfil = () => {
               <Label>Tokens</Label>
               <Input value={String(profile?.tokens ?? 0)} disabled />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Input value={profile?.status === "active" ? "Ativo" : "Inativo"} disabled />
           </div>
           <Button onClick={handleSave} disabled={isSaving} variant="glow">
             {isSaving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Salvando...</> : <><Save className="w-4 h-4 mr-2" /> Salvar</>}
