@@ -39,22 +39,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    // "buscar registro da tabela students."
     const { data } = await supabase
-      .from("students" as any)
-      .select("id, name, plan, tokens, questions_today, status, plan_expires_at")
-      .eq("id", userId) // assuming the student ID matches the auth user ID based on "quando estudante fizer login"
+      .from("profiles")
+      .select("user_id, name, plan, tokens, questions_today, status, plan_expires_at")
+      .eq("user_id", userId)
       .single();
     if (data) {
-        setProfile(data as Student);
+      setProfile({
+        id: data.user_id,
+        name: data.name,
+        plan: data.plan,
+        tokens: data.tokens,
+        questions_today: data.questions_today,
+        status: data.status,
+        plan_expires_at: data.plan_expires_at,
+      });
     } else {
-        // Fallback or error handling if student is not found
-        const { data: profileData } = await supabase.from("profiles").select("id:user_id, name, plan, tokens, questions_today, status, plan_expires_at").eq("user_id", userId).single();
-        if (profileData) {
-            setProfile(profileData as Student);
-        } else {
-            setProfile(null);
-        }
+      setProfile(null);
+    }
     }
   };
 
