@@ -12,7 +12,7 @@ import { ChatMessages, type Msg } from "@/components/ai-tutor/ChatMessages";
 const defaultMode = "professor";
 
 const AiTutor = () => {
-  const { profile, refreshProfile } = useAuth();
+  const { profile, user, refreshProfile } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [mode, setMode] = useState(defaultMode);
