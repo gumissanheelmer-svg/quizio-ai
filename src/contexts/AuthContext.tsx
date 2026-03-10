@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // "buscar registro da tabela students."
     const { data } = await supabase
       .from("students" as any)
-      .select("id, name, plan, tokens")
+      .select("id, name, plan, tokens, questions_today, status, plan_expires_at")
       .eq("id", userId) // assuming the student ID matches the auth user ID based on "quando estudante fizer login"
       .single();
     if (data) {
