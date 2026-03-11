@@ -44,6 +44,33 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_settings: {
+        Row: {
+          emola_name: string
+          emola_number: string
+          id: string
+          mpesa_name: string
+          mpesa_number: string
+          updated_at: string
+        }
+        Insert: {
+          emola_name?: string
+          emola_number?: string
+          id?: string
+          mpesa_name?: string
+          mpesa_number?: string
+          updated_at?: string
+        }
+        Update: {
+          emola_name?: string
+          emola_number?: string
+          id?: string
+          mpesa_name?: string
+          mpesa_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
