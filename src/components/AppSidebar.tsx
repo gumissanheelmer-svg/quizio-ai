@@ -17,6 +17,8 @@ import {
   Shield,
   ShoppingCart,
   UsersRound,
+  Settings,
+  LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { GraduationCap } from "lucide-react";
