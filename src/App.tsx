@@ -27,6 +27,7 @@ import Perfil from "./pages/app/Perfil";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminVendas from "./pages/admin/AdminVendas";
 import AdminEstudantes from "./pages/admin/AdminEstudantes";
+import AdminConfiguracoes from "./pages/admin/AdminConfiguracoes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
