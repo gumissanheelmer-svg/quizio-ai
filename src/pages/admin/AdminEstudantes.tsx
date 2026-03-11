@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Users, Loader2, Search } from "lucide-react";
+import { Users, Loader2, Search, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 
 interface Student {
   id: string;
@@ -20,18 +22,54 @@ const AdminEstudantes = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [processing, setProcessing] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
+  const load = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setStudents((data as Student[]) ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const toggleStatus = async (student: Student) => {
+    const newStatus = student.status === "active" ? "inactive" : "active";
+    setProcessing(student.id);
+    try {
+      const { error } = await supabase
         .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-      setStudents((data as Student[]) ?? []);
-      setLoading(false);
-    };
-    load();
-  }, []);
+        .update({ status: newStatus } as any)
+        .eq("id", student.id);
+      if (error) throw error;
+      toast.success(`Estudante ${newStatus === "active" ? "ativado" : "desativado"} com sucesso`);
+      await load();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao atualizar status");
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const deleteStudent = async (student: Student) => {
+    if (!confirm(`Tem certeza que deseja apagar "${student.name || "Sem nome"}"? Esta ação não pode ser desfeita.`)) return;
+    setProcessing(student.id);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", student.id);
+      if (error) throw error;
+      toast.success("Estudante removido com sucesso");
+      await load();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao remover estudante");
+    } finally {
+      setProcessing(null);
+    }
+  };
 
   const filtered = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase())
@@ -91,6 +129,25 @@ const AdminEstudantes = () => {
                   }>
                     {s.status === "active" ? "Ativo" : "Inativo"}
                   </Badge>
+                  <Button
+                    size="sm"
+                    variant={s.status === "active" ? "destructive" : "default"}
+                    disabled={processing === s.id}
+                    onClick={() => toggleStatus(s)}
+                  >
+                    {processing === s.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : s.status === "active" ? "Desativar" : "Ativar"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={processing === s.id}
+                    onClick={() => deleteStudent(s)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
