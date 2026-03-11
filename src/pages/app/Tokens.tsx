@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Coins, CreditCard, Loader2, Gift, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,11 +18,6 @@ const packages = [
   { tokens: 1000, price: 450 },
 ];
 
-const paymentAccounts = {
-  mpesa: { number: "855430949", name: "Elmer Gumissanhe" },
-  emola: { number: "873702423", name: "Cossilia Manuel Chamunorga" },
-};
-
 const CopyButton = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
@@ -37,6 +32,11 @@ const CopyButton = ({ text }: { text: string }) => {
   );
 };
 
+interface PaymentAccount {
+  number: string;
+  name: string;
+}
+
 const Tokens = () => {
   const { profile, user, refreshProfile } = useAuth();
   const [selectedPkg, setSelectedPkg] = useState(packages[0]);
@@ -45,6 +45,28 @@ const Tokens = () => {
   const [promoCode, setPromoCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const [paymentAccounts, setPaymentAccounts] = useState<Record<string, PaymentAccount>>({
+    mpesa: { number: "", name: "" },
+    emola: { number: "", name: "" },
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const { data } = await supabase
+        .from("payment_settings")
+        .select("*")
+        .limit(1)
+        .single();
+      if (data) {
+        const d = data as any;
+        setPaymentAccounts({
+          mpesa: { number: d.mpesa_number || "", name: d.mpesa_name || "" },
+          emola: { number: d.emola_number || "", name: d.emola_name || "" },
+        });
+      }
+    };
+    loadSettings();
+  }, []);
 
   const validateCode = (code: string, method: string): boolean => {
     if (method === "mpesa") return /^[A-Z0-9]{10,11}$/.test(code.trim());
@@ -190,22 +212,19 @@ const Tokens = () => {
                   </Select>
                 </div>
 
-                {/* Payment account info */}
-                <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 space-y-1">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                    Envie para:
-                  </p>
-                  <div className="flex items-center">
-                    <span className="font-mono font-bold text-accent">{activeAccount.number}</span>
-                    <CopyButton text={activeAccount.number} />
+                {activeAccount.number && (
+                  <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Envie para:</p>
+                    <div className="flex items-center">
+                      <span className="font-mono font-bold text-accent">{activeAccount.number}</span>
+                      <CopyButton text={activeAccount.number} />
+                    </div>
+                    <p className="text-sm text-muted-foreground">{activeAccount.name}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground">{activeAccount.name}</p>
-                </div>
+                )}
 
                 <div className="space-y-2">
-                  <Label>
-                    {paymentMethod === "mpesa" ? "Código de Transação" : "Cole a mensagem eMola"}
-                  </Label>
+                  <Label>{paymentMethod === "mpesa" ? "Código de Transação" : "Cole a mensagem eMola"}</Label>
                   <Input
                     value={transactionCode}
                     onChange={e => setTransactionCode(e.target.value)}
