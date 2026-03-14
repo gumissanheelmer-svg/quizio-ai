@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [profileRes, roleRes] = await Promise.all([
       supabase
         .from("profiles")
-        .select("user_id, name, plan, tokens, questions_today, status, plan_expires_at")
+        .select("user_id, name, plan, tokens, questions_today, status, plan_expires_at, learning_level")
         .eq("user_id", userId)
         .single(),
       supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
