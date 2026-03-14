@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Brain, Coins, FileText, Zap, TrendingUp, Clock, LogOut } from "lucide-react";
+import { Brain, Coins, FileText, Zap, TrendingUp, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const quickActions = [
@@ -13,17 +13,11 @@ const quickActions = [
 ];
 
 const Dashboard = () => {
-  const { profile, signOut, refreshProfile } = useAuth();
-  const navigate = useNavigate();
+  const { profile, refreshProfile } = useAuth();
 
   useEffect(() => {
     refreshProfile();
   }, []);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
 
   const stats = [
     { label: "Tokens Disponíveis", value: String(profile?.tokens ?? 0), icon: Coins, color: "text-accent" },
@@ -35,19 +29,13 @@ const Dashboard = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <motion.div
-        className="flex items-center justify-between"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div>
-          <h1 className="text-2xl md:text-3xl font-heading font-bold mb-1">
-            Olá, {profile?.name || "Estudante"}! 👋
-          </h1>
-          <p className="text-muted-foreground">O que vamos estudar hoje?</p>
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleSignOut}>
-          <LogOut className="w-4 h-4 mr-2" /> Sair
-        </Button>
+        <h1 className="text-2xl md:text-3xl font-heading font-bold mb-1">
+          Olá, {profile?.name || "Estudante"}! 👋
+        </h1>
+        <p className="text-muted-foreground">O que vamos estudar hoje?</p>
       </motion.div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -1,21 +1,17 @@
-import { useEffect, useState, ReactNode } from "react";
+import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabaseClient";
 import { Loader2 } from "lucide-react";
 
 const AdminRoute = ({ children }: { children: ReactNode }) => {
-  const { user, loading: authLoading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const { user, isAdmin, loading } = useAuth();
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" })
-      .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
-
-  if (authLoading || (user && isAdmin === null)) {
-    return <div className="flex items-center justify-center h-full"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  if (loading || (user && isAdmin === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (!user || !isAdmin) return <Navigate to="/app" replace />;

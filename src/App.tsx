@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AppLayout from "./components/AppLayout";
+import AdminLayout from "./components/AdminLayout";
 import Dashboard from "./pages/app/Dashboard";
 import AiTutor from "./pages/app/AiTutor";
 import CriarTrabalho from "./pages/app/CriarTrabalho";
@@ -43,6 +44,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+
+            {/* Student routes */}
             <Route
               path="/app"
               element={
@@ -65,11 +68,23 @@ const App = () => (
               <Route path="tokens" element={<Tokens />} />
               <Route path="planos" element={<Planos />} />
               <Route path="perfil" element={<Perfil />} />
-              <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="admin/vendas" element={<AdminRoute><AdminVendas /></AdminRoute>} />
-              <Route path="admin/estudantes" element={<AdminRoute><AdminEstudantes /></AdminRoute>} />
-              <Route path="admin/configuracoes" element={<AdminRoute><AdminConfiguracoes /></AdminRoute>} />
             </Route>
+
+            {/* Admin routes */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="vendas" element={<AdminVendas />} />
+              <Route path="estudantes" element={<AdminEstudantes />} />
+              <Route path="configuracoes" element={<AdminConfiguracoes />} />
+            </Route>
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
