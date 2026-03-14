@@ -139,7 +139,7 @@ export const ChatMessages = forwardRef<HTMLDivElement, ChatMessagesProps>(
                       title="Copiar"
                     >
                       {copiedIndex === i ? (
-                        <Check className="w-3.5 h-3.5 text-green-500" />
+                        <Check className="w-3.5 h-3.5 text-accent" />
                       ) : (
                         <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                       )}
