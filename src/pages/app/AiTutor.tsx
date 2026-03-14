@@ -167,6 +167,56 @@ const AiTutor = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleEditMessage = async (index: number, newContent: string) => {
+    if (isLoading || !user || !profile) return;
+
+    if ((profile.tokens ?? 0) < TOKENS_PER_QUESTION) {
+      toast.error("Você ficou sem tokens.", {
+        duration: 5000,
+        action: { label: "Comprar tokens", onClick: () => window.location.href = "/app/tokens" },
+      });
+      return;
+    }
+
+    // Keep messages up to the edited one, replace its content, remove everything after
+    const updatedMessages = messages.slice(0, index);
+    const editedMsg: Msg = { role: "user", content: newContent, edited: true };
+    updatedMessages.push(editedMsg);
+
+    setMessages([...updatedMessages, { role: "assistant", content: "" }]);
+    setIsLoading(true);
+
+    try {
+      await streamChat({
+        messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
+        mode: activeTool?.value || mode,
+        learningLevel: profile?.learning_level || "intermediate",
+        onDelta: (delta) => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last.role === "assistant") {
+              updated[updated.length - 1] = { ...last, content: last.content + delta };
+            }
+            return updated;
+          });
+        },
+        onDone: () => {
+          refreshProfile();
+        },
+      });
+    } catch (e: any) {
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last.role === "assistant" && !last.content) return prev.slice(0, -1);
+        return prev;
+      });
+      toast.error(e.message || "Erro ao conectar com a IA");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const placeholder = activeTool?.placeholder || "Digite sua pergunta...";
 
   return (
@@ -182,7 +232,7 @@ const AiTutor = () => {
         </div>
       </motion.div>
 
-      <ChatMessages ref={scrollRef} messages={messages} isLoading={isLoading} historyLoaded={historyLoaded} />
+      <ChatMessages ref={scrollRef} messages={messages} isLoading={isLoading} historyLoaded={historyLoaded} onEditMessage={handleEditMessage} />
 
       <div className="border border-border rounded-xl bg-gradient-card p-3">
         <div className="flex items-end gap-2">
