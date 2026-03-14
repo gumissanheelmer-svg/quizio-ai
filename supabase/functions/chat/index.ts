@@ -187,7 +187,13 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = (modePrompts[mode] || modePrompts.professor) + (levelInstructions[learning_level] || levelInstructions.intermediate);
+    const smartResponseRule = `\n\nRESPOSTAS INTELIGENTES:
+- Para saudações simples (olá, oi, bom dia, boa tarde, boa noite, hello, hi, hey, e aí, tudo bem), responda de forma CURTA e amigável em 1-2 linhas com emoji. Exemplo: "Olá! 👋 Como posso ajudar você hoje?"
+- Para perguntas simples e diretas, responda de forma concisa e objetiva.
+- Para perguntas complexas ou que pedem explicações detalhadas, siga a estrutura completa do modo ativo.
+- NUNCA gere respostas longas para mensagens curtas de saudação ou cumprimento.`;
+
+    const systemPrompt = (modePrompts[mode] || modePrompts.professor) + (levelInstructions[learning_level] || levelInstructions.intermediate) + smartResponseRule;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

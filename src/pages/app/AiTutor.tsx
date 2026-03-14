@@ -232,7 +232,7 @@ const AiTutor = () => {
         </div>
       </motion.div>
 
-      <ChatMessages ref={scrollRef} messages={messages} isLoading={isLoading} historyLoaded={historyLoaded} />
+      <ChatMessages ref={scrollRef} messages={messages} isLoading={isLoading} historyLoaded={historyLoaded} onEditMessage={handleEditMessage} />
 
       <div className="border border-border rounded-xl bg-gradient-card p-3">
         <div className="flex items-end gap-2">
