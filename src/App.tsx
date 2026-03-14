@@ -25,6 +25,7 @@ import AnaliseImagem from "./pages/app/AnaliseImagem";
 import Tokens from "./pages/app/Tokens";
 import Planos from "./pages/app/Planos";
 import Perfil from "./pages/app/Perfil";
+import DiagnosticQuiz from "./pages/app/DiagnosticQuiz";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminVendas from "./pages/admin/AdminVendas";
 import AdminEstudantes from "./pages/admin/AdminEstudantes";
