@@ -60,7 +60,10 @@ const AiTutor = () => {
     if (!text || isLoading || !user || !profile) return;
 
     if ((profile.tokens ?? 0) < TOKENS_PER_QUESTION) {
-      toast.error(`Tokens insuficientes. Você precisa de pelo menos ${TOKENS_PER_QUESTION} tokens.`);
+      toast.error("Você ficou sem tokens. Compre mais tokens ou atualize seu plano para continuar usando o AI Tutor.", {
+        duration: 5000,
+        action: { label: "Comprar tokens", onClick: () => window.location.href = "/app/tokens" },
+      });
       return;
     }
 
