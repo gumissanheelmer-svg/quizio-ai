@@ -79,9 +79,11 @@ export type Database = {
           created_at: string
           id: string
           payment_method: string
+          plan_name: string | null
           status: string
           tokens: number
           transaction_code: string
+          type: string
           user_id: string
         }
         Insert: {
@@ -91,9 +93,11 @@ export type Database = {
           created_at?: string
           id?: string
           payment_method: string
+          plan_name?: string | null
           status?: string
           tokens: number
           transaction_code: string
+          type?: string
           user_id: string
         }
         Update: {
@@ -103,9 +107,11 @@ export type Database = {
           created_at?: string
           id?: string
           payment_method?: string
+          plan_name?: string | null
           status?: string
           tokens?: number
           transaction_code?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
