@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS learning_level TEXT NOT NULL DEFAULT 'none';
