@@ -26,7 +26,7 @@ export async function streamChat({
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ messages, mode }),
+    body: JSON.stringify({ messages, mode, learning_level: learningLevel }),
   });
 
   if (!resp.ok || !resp.body) {
