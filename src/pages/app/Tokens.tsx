@@ -121,7 +121,12 @@ const Tokens = () => {
         p_user_id: user!.id,
       });
       if (error) throw error;
-      toast.success(`Plano ${String(data).toUpperCase()} ativado com sucesso!`);
+      const plan = String(data).toUpperCase();
+      if (plan === "VIP") {
+        toast.success("🎉 Parabéns! Você desbloqueou o Plano VIP Vitalício. Agora você tem acesso completo a todas as ferramentas do Quízio AI para estudar, criar trabalhos e aprender com o AI Tutor sem limitações.", { duration: 8000 });
+      } else {
+        toast.success(`Plano ${plan} ativado com sucesso!`);
+      }
       setPromoCode("");
       refreshProfile();
     } catch (e: any) {
