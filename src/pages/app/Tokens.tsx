@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Coins, CreditCard, Loader2, Gift, Copy, Check } from "lucide-react";
+import SuccessModal from "@/components/SuccessModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
