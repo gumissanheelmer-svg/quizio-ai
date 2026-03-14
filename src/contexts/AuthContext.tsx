@@ -10,6 +10,7 @@ export interface Student {
   questions_today?: number;
   status?: string;
   plan_expires_at?: string | null;
+  learning_level?: string;
 }
 
 interface AuthContextType {
