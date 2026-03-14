@@ -1,0 +1,1 @@
+UPDATE public.promo_codes SET duration_days = NULL, plan = 'vip' WHERE code = 'MERNIELA55';
