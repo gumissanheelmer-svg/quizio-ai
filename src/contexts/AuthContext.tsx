@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         questions_today: profileRes.data.questions_today,
         status: profileRes.data.status,
         plan_expires_at: profileRes.data.plan_expires_at,
+        learning_level: profileRes.data.learning_level,
       });
     } else {
       setProfile(null);
