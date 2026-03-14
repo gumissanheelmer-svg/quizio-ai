@@ -135,7 +135,11 @@ const Planos = () => {
         else throw error;
         return;
       }
-      toast.success("Pagamento enviado para verificação. Aguarde confirmação do administrador.");
+      setSuccessModal({
+        open: true,
+        title: "Solicitação de Plano Enviada ✔",
+        message: "Seu pedido de ativação de plano foi enviado para análise.\n\nApós a confirmação do pagamento, seu plano será ativado automaticamente.",
+      });
       setTransactionCode("");
       setSelectedPlan(null);
     } catch (e: any) {

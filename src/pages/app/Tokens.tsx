@@ -291,6 +291,13 @@ const Tokens = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <SuccessModal
+        open={successModal.open}
+        onClose={() => setSuccessModal({ ...successModal, open: false })}
+        title={successModal.title}
+        message={successModal.message}
+      />
     </div>
   );
 };
