@@ -46,6 +46,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
+            {/* Diagnostic quiz (before ProtectedRoute to avoid redirect loop) */}
+            <Route path="/app/diagnostico" element={<DiagnosticQuiz />} />
+
             {/* Student routes */}
             <Route
               path="/app"
