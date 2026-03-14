@@ -112,6 +112,34 @@ ESTRUTURA:
 4. Resumo em 2 frases`,
 };
 
+const levelInstructions: Record<string, string> = {
+  basic: `\n\nNÍVEL DO ESTUDANTE: INICIANTE
+ADAPTAÇÕES OBRIGATÓRIAS:
+- Use linguagem muito simples, evite termos técnicos
+- Frases curtas e diretas
+- Explicações passo a passo detalhadas
+- Use exemplos do dia a dia (jogos, comida, redes sociais)
+- Repita conceitos importantes de formas diferentes
+- Use emojis ocasionalmente para tornar mais acolhedor`,
+
+  intermediate: `\n\nNÍVEL DO ESTUDANTE: INTERMEDIÁRIO
+ADAPTAÇÕES OBRIGATÓRIAS:
+- Explicações completas mas acessíveis
+- Pode usar alguns termos técnicos (sempre explicando na primeira vez)
+- Estruture em tópicos organizados
+- Inclua conexões entre conceitos
+- Dê exemplos práticos e contextualizados`,
+
+  advanced: `\n\nNÍVEL DO ESTUDANTE: AVANÇADO
+ADAPTAÇÕES OBRIGATÓRIAS:
+- Use linguagem acadêmica e formal
+- Explicações mais profundas e analíticas
+- Inclua referências e fontes quando possível
+- Explore nuances e exceções dos conceitos
+- Apresente perspectivas diferentes sobre o tema
+- Desafie o estudante com perguntas reflexivas`,
+};
+
 const TOKENS_PER_QUESTION = 5;
 
 serve(async (req) => {
