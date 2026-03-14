@@ -105,7 +105,11 @@ const Tokens = () => {
         else throw error;
         return;
       }
-      toast.success("Pagamento enviado! Aguarde confirmação do administrador.");
+      setSuccessModal({
+        open: true,
+        title: "Pagamento Enviado ✔",
+        message: "Seu pagamento foi enviado para verificação.\n\nAssim que o administrador confirmar a transação, os tokens serão adicionados à sua conta automaticamente.",
+      });
       setTransactionCode("");
     } catch (e: any) {
       toast.error(e.message || "Erro ao enviar pagamento");
