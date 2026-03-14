@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
-import { useNavigate } from "react-router-dom";
 
 export interface Student {
   id: string;
@@ -16,7 +15,8 @@ export interface Student {
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  profile: Student | null; // keep profile variable to not break other components, but object is student
+  profile: Student | null;
+  isAdmin: boolean | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -26,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   profile: null,
+  isAdmin: null,
   loading: true,
   signOut: async () => {},
   refreshProfile: async () => {},
@@ -36,27 +37,34 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Student | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("user_id, name, plan, tokens, questions_today, status, plan_expires_at")
-      .eq("user_id", userId)
-      .single();
-    if (data) {
+    const [profileRes, roleRes] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("user_id, name, plan, tokens, questions_today, status, plan_expires_at")
+        .eq("user_id", userId)
+        .single(),
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+    ]);
+
+    if (profileRes.data) {
       setProfile({
-        id: data.user_id,
-        name: data.name,
-        plan: data.plan,
-        tokens: data.tokens,
-        questions_today: data.questions_today,
-        status: data.status,
-        plan_expires_at: data.plan_expires_at,
+        id: profileRes.data.user_id,
+        name: profileRes.data.name,
+        plan: profileRes.data.plan,
+        tokens: profileRes.data.tokens,
+        questions_today: profileRes.data.questions_today,
+        status: profileRes.data.status,
+        plan_expires_at: profileRes.data.plan_expires_at,
       });
     } else {
       setProfile(null);
     }
+
+    setIsAdmin(!!roleRes.data);
   };
 
   const refreshProfile = async () => {
@@ -73,6 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setTimeout(() => fetchProfile(session.user.id), 0);
         } else {
           setProfile(null);
+          setIsAdmin(null);
         }
         setLoading(false);
       }
@@ -93,6 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
+    setIsAdmin(null);
   };
 
   return (
@@ -101,6 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         session,
         user: session?.user ?? null,
         profile,
+        isAdmin,
         loading,
         signOut,
         refreshProfile,

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Brain,
   FileText,
@@ -14,16 +13,11 @@ import {
   BookOpen,
   ClipboardList,
   FileDown,
-  Shield,
-  ShoppingCart,
-  UsersRound,
-  Settings,
   LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { GraduationCap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabaseClient";
 import {
   Sidebar,
   SidebarContent,
@@ -87,28 +81,10 @@ function SidebarSection({ label, items, collapsed }: { label: string; items: typ
   );
 }
 
-const adminItems = [
-  { title: "Admin Dashboard", url: "/app/admin", icon: Shield },
-  { title: "Vendas", url: "/app/admin/vendas", icon: ShoppingCart },
-  { title: "Estudantes", url: "/app/admin/estudantes", icon: UsersRound },
-  { title: "Configurações", url: "/app/admin/configuracoes", icon: Settings },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const collapsed = state === "collapsed";
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" })
-      .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
-
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   return (
     <Sidebar collapsible="icon">
@@ -124,13 +100,12 @@ export function AppSidebar() {
         <SidebarSection label="Principal" items={mainItems} collapsed={collapsed} />
         <SidebarSection label="Ferramentas" items={toolItems} collapsed={collapsed} />
         <SidebarSection label="Conta" items={accountItems} collapsed={collapsed} />
-        {isAdmin && <SidebarSection label="Admin" items={adminItems} collapsed={collapsed} />}
 
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                <SidebarMenuButton onClick={signOut} className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                   <LogOut className="mr-2 h-4 w-4 shrink-0" />
                   {!collapsed && <span>Sair</span>}
                 </SidebarMenuButton>
