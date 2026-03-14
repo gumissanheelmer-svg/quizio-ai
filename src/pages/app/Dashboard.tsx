@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Brain, Coins, FileText, Zap, TrendingUp, Clock, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,8 +13,12 @@ const quickActions = [
 ];
 
 const Dashboard = () => {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    refreshProfile();
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
