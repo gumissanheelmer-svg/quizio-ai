@@ -13,8 +13,12 @@ const quickActions = [
 ];
 
 const Dashboard = () => {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    refreshProfile();
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
