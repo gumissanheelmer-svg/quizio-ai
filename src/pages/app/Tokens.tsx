@@ -46,6 +46,7 @@ const Tokens = () => {
   const [promoCode, setPromoCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const [successModal, setSuccessModal] = useState<{ open: boolean; title: string; message: string }>({ open: false, title: "", message: "" });
   const [paymentAccounts, setPaymentAccounts] = useState<Record<string, PaymentAccount>>({
     mpesa: { number: "", name: "" },
     emola: { number: "", name: "" },
