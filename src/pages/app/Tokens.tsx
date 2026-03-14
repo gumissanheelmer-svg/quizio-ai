@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Coins, CreditCard, Loader2, Gift, Copy, Check } from "lucide-react";
+import SuccessModal from "@/components/SuccessModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,7 @@ const Tokens = () => {
   const [promoCode, setPromoCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const [successModal, setSuccessModal] = useState<{ open: boolean; title: string; message: string }>({ open: false, title: "", message: "" });
   const [paymentAccounts, setPaymentAccounts] = useState<Record<string, PaymentAccount>>({
     mpesa: { number: "", name: "" },
     emola: { number: "", name: "" },
@@ -103,7 +105,11 @@ const Tokens = () => {
         else throw error;
         return;
       }
-      toast.success("Pagamento enviado! Aguarde confirmação do administrador.");
+      setSuccessModal({
+        open: true,
+        title: "Pagamento Enviado ✔",
+        message: "Seu pagamento foi enviado para verificação.\n\nAssim que o administrador confirmar a transação, os tokens serão adicionados à sua conta automaticamente.",
+      });
       setTransactionCode("");
     } catch (e: any) {
       toast.error(e.message || "Erro ao enviar pagamento");
@@ -123,9 +129,17 @@ const Tokens = () => {
       if (error) throw error;
       const plan = String(data).toUpperCase();
       if (plan === "VIP") {
-        toast.success("🎉 Parabéns! Você desbloqueou o Plano VIP Vitalício. Agora você tem acesso completo a todas as ferramentas do Quízio AI para estudar, criar trabalhos e aprender com o AI Tutor sem limitações.", { duration: 8000 });
+        setSuccessModal({
+          open: true,
+          title: "Plano VIP Desbloqueado 🎉",
+          message: "Parabéns! Você desbloqueou o Plano VIP Vitalício.\n\nAgora você tem acesso completo a todas as ferramentas do Quízio AI para estudar, criar trabalhos, gerar resumos e usar o AI Tutor sem limitações.",
+        });
       } else {
-        toast.success(`Plano ${plan} ativado com sucesso!`);
+        setSuccessModal({
+          open: true,
+          title: `Plano ${plan} Ativado 🎉`,
+          message: `Seu plano ${plan} foi ativado com sucesso! Aproveite todos os benefícios.`,
+        });
       }
       setPromoCode("");
       refreshProfile();
@@ -277,8 +291,16 @@ const Tokens = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <SuccessModal
+        open={successModal.open}
+        onClose={() => setSuccessModal({ ...successModal, open: false })}
+        title={successModal.title}
+        message={successModal.message}
+      />
     </div>
   );
 };
 
 export default Tokens;
+

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Crown, Coins, CreditCard, Loader2, Copy, ArrowLeft } from "lucide-react";
+import SuccessModal from "@/components/SuccessModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,6 +68,7 @@ const Planos = () => {
   const [paymentMethod, setPaymentMethod] = useState("mpesa");
   const [transactionCode, setTransactionCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successModal, setSuccessModal] = useState<{ open: boolean; title: string; message: string }>({ open: false, title: "", message: "" });
   const [paymentAccounts, setPaymentAccounts] = useState<Record<string, PaymentAccount>>({
     mpesa: { number: "", name: "" },
     emola: { number: "", name: "" },
@@ -133,7 +135,11 @@ const Planos = () => {
         else throw error;
         return;
       }
-      toast.success("Pagamento enviado para verificação. Aguarde confirmação do administrador.");
+      setSuccessModal({
+        open: true,
+        title: "Solicitação de Plano Enviada ✔",
+        message: "Seu pedido de ativação de plano foi enviado para análise.\n\nApós a confirmação do pagamento, seu plano será ativado automaticamente.",
+      });
       setTransactionCode("");
       setSelectedPlan(null);
     } catch (e: any) {
@@ -338,6 +344,13 @@ const Planos = () => {
           );
         })}
       </div>
+
+      <SuccessModal
+        open={successModal.open}
+        onClose={() => setSuccessModal({ ...successModal, open: false })}
+        title={successModal.title}
+        message={successModal.message}
+      />
     </div>
   );
 };
