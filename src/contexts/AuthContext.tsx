@@ -10,6 +10,7 @@ export interface Student {
   questions_today?: number;
   status?: string;
   plan_expires_at?: string | null;
+  learning_level?: string;
 }
 
 interface AuthContextType {
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [profileRes, roleRes] = await Promise.all([
       supabase
         .from("profiles")
-        .select("user_id, name, plan, tokens, questions_today, status, plan_expires_at")
+        .select("user_id, name, plan, tokens, questions_today, status, plan_expires_at, learning_level")
         .eq("user_id", userId)
         .single(),
       supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
@@ -59,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         questions_today: profileRes.data.questions_today,
         status: profileRes.data.status,
         plan_expires_at: profileRes.data.plan_expires_at,
+        learning_level: profileRes.data.learning_level,
       });
     } else {
       setProfile(null);

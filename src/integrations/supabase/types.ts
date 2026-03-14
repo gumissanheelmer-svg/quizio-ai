@@ -121,6 +121,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           id: string
+          learning_level: string
           name: string
           phone: string | null
           plan: string
@@ -136,6 +137,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           id?: string
+          learning_level?: string
           name?: string
           phone?: string | null
           plan?: string
@@ -151,6 +153,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           id?: string
+          learning_level?: string
           name?: string
           phone?: string | null
           plan?: string

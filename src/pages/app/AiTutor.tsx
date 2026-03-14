@@ -82,6 +82,7 @@ const AiTutor = () => {
       await streamChat({
         messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
         mode: activeMode,
+        learningLevel: profile?.learning_level || "intermediate",
         onDelta: (delta) => {
           setMessages((prev) => {
             const updated = [...prev];

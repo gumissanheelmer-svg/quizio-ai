@@ -25,6 +25,7 @@ import AnaliseImagem from "./pages/app/AnaliseImagem";
 import Tokens from "./pages/app/Tokens";
 import Planos from "./pages/app/Planos";
 import Perfil from "./pages/app/Perfil";
+import DiagnosticQuiz from "./pages/app/DiagnosticQuiz";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminVendas from "./pages/admin/AdminVendas";
 import AdminEstudantes from "./pages/admin/AdminEstudantes";
@@ -44,6 +45,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+
+            {/* Diagnostic quiz (before ProtectedRoute to avoid redirect loop) */}
+            <Route path="/app/diagnostico" element={<DiagnosticQuiz />} />
 
             {/* Student routes */}
             <Route
