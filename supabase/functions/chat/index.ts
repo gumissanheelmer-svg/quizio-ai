@@ -159,7 +159,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { messages, mode = "professor" } = await req.json();
+    const { messages, mode = "professor", learning_level = "intermediate" } = await req.json();
 
     // Check tokens
     const { data: profile } = await supabase
