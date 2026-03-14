@@ -7,11 +7,13 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 export async function streamChat({
   messages,
   mode = "professor",
+  learningLevel = "intermediate",
   onDelta,
   onDone,
 }: {
   messages: Msg[];
   mode?: string;
+  learningLevel?: string;
   onDelta: (deltaText: string) => void;
   onDone: () => void;
 }) {
