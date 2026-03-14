@@ -1,4 +1,4 @@
-import { Plus, Upload, ImagePlus, Brain, Search, ShoppingCart, FileText, BookOpen, X } from "lucide-react";
+import { Plus, Upload, ImagePlus, Brain, Search, FileText, BookOpen, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState } from "react";
