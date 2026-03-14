@@ -1,16 +1,11 @@
 import {
   Brain,
-  FileText,
   Calendar,
   Users,
-  ImageIcon,
-  Zap,
-  Upload,
   Coins,
   CreditCard,
   User,
   LayoutDashboard,
-  BookOpen,
   ClipboardList,
   FileDown,
   LogOut,
@@ -34,18 +29,13 @@ import {
 const mainItems = [
   { title: "Dashboard", url: "/app", icon: LayoutDashboard },
   { title: "AI Tutor", url: "/app/tutor", icon: Brain },
-  { title: "Criar Trabalho", url: "/app/criar-trabalho", icon: FileText },
   { title: "Meus Trabalhos", url: "/app/meus-trabalhos", icon: FileDown },
   { title: "Simulados", url: "/app/simulados", icon: ClipboardList },
-  { title: "Resumos", url: "/app/resumos", icon: BookOpen },
 ];
 
 const toolItems = [
   { title: "Smart Planner", url: "/app/planner", icon: Calendar },
   { title: "Quízio Rooms", url: "/app/rooms", icon: Users },
-  { title: "Prova Amanhã", url: "/app/prova-amanha", icon: Zap },
-  { title: "Upload Arquivos", url: "/app/upload", icon: Upload },
-  { title: "Análise de Imagem", url: "/app/imagem", icon: ImageIcon },
 ];
 
 const accountItems = [

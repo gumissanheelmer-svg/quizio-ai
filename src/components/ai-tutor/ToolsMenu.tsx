@@ -13,11 +13,10 @@ export type ToolMode = {
 export const tools: ToolMode[] = [
   { value: "upload", label: "Carregar fotos e arquivos", icon: Upload, placeholder: "Descreva o arquivo enviado..." },
   { value: "criar-imagem", label: "Criar imagem", icon: ImagePlus, placeholder: "Descreva a imagem que deseja criar..." },
-  { value: "pensar", label: "Pensar", icon: Brain, placeholder: "Sobre o que deseja refletir?" },
-  { value: "pesquisa", label: "Pesquisa aprofundada", icon: Search, placeholder: "O que deseja pesquisar?" },
-  { value: "pesquisa-produtos", label: "Pesquisa de produtos", icon: ShoppingCart, placeholder: "Qual produto deseja pesquisar?" },
   { value: "trabalho", label: "Criar trabalho", icon: FileText, placeholder: "Digite o tema do trabalho..." },
   { value: "resumo", label: "Criar resumo", icon: BookOpen, placeholder: "Cole o texto aqui..." },
+  { value: "prova-amanha", label: "Prova amanhã", icon: Brain, placeholder: "Qual matéria é a prova?" },
+  { value: "professor", label: "Explicar como professor", icon: Search, placeholder: "O que deseja que eu explique?" },
 ];
 
 interface ToolsMenuProps {
