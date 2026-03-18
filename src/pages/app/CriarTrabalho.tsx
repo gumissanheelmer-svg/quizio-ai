@@ -212,13 +212,7 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `${title || "trabalho"}.txt`;
-                    a.click();
-                    URL.revokeObjectURL(url);
+                    downloadAsDocx(result, title);
                     toast.success("Download iniciado!");
                   }}
                 >

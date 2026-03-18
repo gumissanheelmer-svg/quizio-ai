@@ -64,15 +64,7 @@ const MeusTrabalhos = () => {
                       </p>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => {
-                    const blob = new Blob([t.content], { type: "text/plain;charset=utf-8" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `${t.title || "trabalho"}.txt`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}>
+                  <Button size="sm" variant="outline" onClick={() => downloadAsDocx(t.content, t.title)}>
                     <Download className="w-4 h-4 mr-1" /> Baixar
                   </Button>
                 </CardContent>
