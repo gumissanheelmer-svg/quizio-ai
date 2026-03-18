@@ -24,7 +24,8 @@ const MeusTrabalhos = () => {
           id: t.id,
           title: t.title,
           type: t.type,
-          date: new Date(t.created_at).toLocaleDateString("pt-BR")
+          date: new Date(t.created_at).toLocaleDateString("pt-BR"),
+          content: t.content || "",
         })));
       }
     };
