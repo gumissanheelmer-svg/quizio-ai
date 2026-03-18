@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { downloadAsDocx } from "@/lib/exportWork";
 
 const docTypes = [
   { value: "word", label: "Word", icon: FileText, tokens: 20 },
