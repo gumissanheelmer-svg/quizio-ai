@@ -8,16 +8,15 @@ import { supabase } from "@/lib/supabaseClient";
 
 const MeusTrabalhos = () => {
   const { profile } = useAuth();
-  const [trabalhos, setTrabalhos] = useState<{ id: string; title: string; type: string; date: string }[]>([]);
+  const [trabalhos, setTrabalhos] = useState<{ id: string; title: string; type: string; date: string; content: string }[]>([]);
 
   useEffect(() => {
     const fetchWorks = async () => {
       if (!profile) return;
-      // Filtro: student_id = usuário logado
       const { data } = await supabase
-        .from("works" as any)
-        .select("id, title, type, created_at")
-        .eq("student_id", profile.id)
+        .from("works")
+        .select("id, title, type, created_at, content")
+        .eq("user_id", profile.id)
         .order("created_at", { ascending: false });
 
       if (data) {
@@ -25,7 +24,8 @@ const MeusTrabalhos = () => {
           id: t.id,
           title: t.title,
           type: t.type,
-          date: new Date(t.created_at).toLocaleDateString("pt-BR")
+          date: new Date(t.created_at).toLocaleDateString("pt-BR"),
+          content: t.content || "",
         })));
       }
     };
@@ -63,7 +63,15 @@ const MeusTrabalhos = () => {
                       </p>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" onClick={() => {
+                    const blob = new Blob([t.content], { type: "text/plain;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${t.title || "trabalho"}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}>
                     <Download className="w-4 h-4 mr-1" /> Baixar
                   </Button>
                 </CardContent>
