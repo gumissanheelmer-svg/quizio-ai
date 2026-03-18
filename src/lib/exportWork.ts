@@ -27,13 +27,13 @@ ${html}
 </body>
 </html>`;
 
-  const blob = new Blob([docContent], {
-    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  const blob = new Blob(['\ufeff' + docContent], {
+    type: "application/msword",
   });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${title || "trabalho"}.docx`;
+  a.download = `${title || "trabalho"}.doc`;
   a.click();
   URL.revokeObjectURL(url);
 }
