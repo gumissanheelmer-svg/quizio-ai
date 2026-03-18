@@ -13,11 +13,10 @@ const MeusTrabalhos = () => {
   useEffect(() => {
     const fetchWorks = async () => {
       if (!profile) return;
-      // Filtro: student_id = usuário logado
       const { data } = await supabase
-        .from("works" as any)
-        .select("id, title, type, created_at")
-        .eq("student_id", profile.id)
+        .from("works")
+        .select("id, title, type, created_at, content")
+        .eq("user_id", profile.id)
         .order("created_at", { ascending: false });
 
       if (data) {
