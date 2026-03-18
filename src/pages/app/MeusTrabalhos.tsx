@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
+import { downloadAsDocx } from "@/lib/exportWork";
 
 const MeusTrabalhos = () => {
   const { profile } = useAuth();
