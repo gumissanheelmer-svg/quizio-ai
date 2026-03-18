@@ -73,7 +73,7 @@ function SidebarSection({ label, items, collapsed }: { label: string; items: typ
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const collapsed = state === "collapsed";
 
   return (
