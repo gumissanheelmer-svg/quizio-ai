@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FileText, FileSpreadsheet, Presentation, Database, Loader2 } from "lucide-react";
+import { FileText, FileSpreadsheet, Presentation, Database, Loader2, Copy, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -170,8 +170,38 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
         </Card>
 
         <Card className="bg-gradient-card border-border">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Resultado</CardTitle>
+            {result && (
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(result);
+                    toast.success("Copiado!");
+                  }}
+                >
+                  <Copy className="w-4 h-4 mr-1" /> Copiar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${title || "trabalho"}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    toast.success("Download iniciado!");
+                  }}
+                >
+                  <Download className="w-4 h-4 mr-1" /> Baixar
+                </Button>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {result ? (
