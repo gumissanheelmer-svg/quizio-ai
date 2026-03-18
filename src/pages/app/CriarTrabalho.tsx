@@ -21,12 +21,16 @@ const docTypes = [
 
 const CriarTrabalho = () => {
   const { profile, refreshProfile } = useAuth();
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [docType, setDocType] = useState("word");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState("");
+
+  const isFree = !profile || profile.plan === "free";
+  const isLockedType = isFree && docType !== "word";
 
   const selectedType = docTypes.find(d => d.value === docType);
 
