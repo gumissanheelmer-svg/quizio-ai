@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 const MeusTrabalhos = () => {
   const { profile } = useAuth();
-  const [trabalhos, setTrabalhos] = useState<{ id: string; title: string; type: string; date: string }[]>([]);
+  const [trabalhos, setTrabalhos] = useState<{ id: string; title: string; type: string; date: string; content: string }[]>([]);
 
   useEffect(() => {
     const fetchWorks = async () => {
