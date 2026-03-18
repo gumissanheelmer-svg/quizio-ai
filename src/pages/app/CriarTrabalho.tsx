@@ -50,6 +50,7 @@ const CriarTrabalho = () => {
 
     setIsLoading(true);
     setResult("");
+    setIsSaved(false);
 
     try {
       const prompt = `Crie um trabalho acadêmico completo do tipo ${docType.toUpperCase()} com o seguinte:
