@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, FileSpreadsheet, Presentation, Database, Loader2, Copy, Download } from "lucide-react";
+import { FileText, FileSpreadsheet, Presentation, Database, Loader2, Copy, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
