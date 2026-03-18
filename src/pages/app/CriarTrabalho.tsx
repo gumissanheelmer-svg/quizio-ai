@@ -28,6 +28,7 @@ const CriarTrabalho = () => {
   const [docType, setDocType] = useState("word");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
 
   const isFree = !profile || profile.plan === "free";
   const isLockedType = isFree && docType !== "word";
