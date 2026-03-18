@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, FileSpreadsheet, Presentation, Database, Loader2, Copy, Download, Lock } from "lucide-react";
+import { FileText, FileSpreadsheet, Presentation, Database, Loader2, Copy, Download, Lock, Save, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +28,7 @@ const CriarTrabalho = () => {
   const [docType, setDocType] = useState("word");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
 
   const isFree = !profile || profile.plan === "free";
   const isLockedType = isFree && docType !== "word";
@@ -49,6 +50,7 @@ const CriarTrabalho = () => {
 
     setIsLoading(true);
     setResult("");
+    setIsSaved(false);
 
     try {
       const prompt = `Crie um trabalho acadêmico completo do tipo ${docType.toUpperCase()} com o seguinte:
@@ -103,7 +105,7 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
         }
       }
 
-      // Save work to database
+      // Auto-save work to database
       if (content) {
         await supabase.from("works").insert({
           user_id: session.user.id,
@@ -112,10 +114,11 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
           content,
           tokens_used: tokensNeeded,
         });
+        setIsSaved(true);
       }
 
       await refreshProfile();
-      toast.success("Trabalho gerado com sucesso!");
+      toast.success("Trabalho gerado e guardado automaticamente!");
     } catch (e: any) {
       toast.error(e.message || "Não foi possível gerar o trabalho. Tente novamente.");
     } finally {
@@ -193,7 +196,7 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Resultado</CardTitle>
             {result && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   size="sm"
                   variant="outline"
@@ -220,6 +223,31 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
                 >
                   <Download className="w-4 h-4 mr-1" /> Baixar
                 </Button>
+                {isSaved ? (
+                  <Button size="sm" variant="outline" disabled className="text-green-500 border-green-500/30">
+                    <CheckCircle className="w-4 h-4 mr-1" /> Guardado
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      const { data: { session } } = await supabase.auth.getSession();
+                      if (!session) return;
+                      await supabase.from("works").insert({
+                        user_id: session.user.id,
+                        title,
+                        type: docType,
+                        content: result,
+                        tokens_used: selectedType?.tokens ?? 0,
+                      });
+                      setIsSaved(true);
+                      toast.success("Trabalho guardado!");
+                    }}
+                  >
+                    <Save className="w-4 h-4 mr-1" /> Guardar
+                  </Button>
+                )}
               </div>
             )}
           </CardHeader>
