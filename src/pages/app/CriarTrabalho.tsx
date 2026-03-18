@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, FileSpreadsheet, Presentation, Database, Loader2, Copy, Download } from "lucide-react";
+import { FileText, FileSpreadsheet, Presentation, Database, Loader2, Copy, Download, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,12 +21,16 @@ const docTypes = [
 
 const CriarTrabalho = () => {
   const { profile, refreshProfile } = useAuth();
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [docType, setDocType] = useState("word");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState("");
+
+  const isFree = !profile || profile.plan === "free";
+  const isLockedType = isFree && docType !== "word";
 
   const selectedType = docTypes.find(d => d.value === docType);
 
@@ -134,21 +139,25 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
             <div className="space-y-2">
               <Label>Tipo de Documento</Label>
               <div className="grid grid-cols-2 gap-2">
-                {docTypes.map(d => (
-                  <button
-                    key={d.value}
-                    onClick={() => setDocType(d.value)}
-                    className={`flex items-center gap-2 p-3 rounded-lg border text-sm transition-colors ${
-                      docType === d.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <d.icon className="w-4 h-4" />
-                    <span>{d.label}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">{d.tokens}t</span>
-                  </button>
-                ))}
+                {docTypes.map(d => {
+                  const locked = isFree && d.value !== "word";
+                  return (
+                    <button
+                      key={d.value}
+                      onClick={() => setDocType(d.value)}
+                      className={`flex items-center gap-2 p-3 rounded-lg border text-sm transition-colors relative ${
+                        docType === d.value
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:border-primary/30"
+                      } ${locked ? "opacity-70" : ""}`}
+                    >
+                      <d.icon className="w-4 h-4" />
+                      <span>{d.label}</span>
+                      {locked && <Lock className="w-3 h-3 text-muted-foreground" />}
+                      <span className="ml-auto text-xs text-muted-foreground">{d.tokens}t</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div className="space-y-2">
@@ -163,9 +172,20 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
               <Label>Instruções (opcional)</Label>
               <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Detalhes adicionais..." rows={3} />
             </div>
-            <Button onClick={handleGenerate} disabled={isLoading} className="w-full" variant="glow">
-              {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Gerando...</> : `Gerar (${selectedType?.tokens}t)`}
-            </Button>
+            {isLockedType ? (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Para gerar documentos em <span className="font-semibold text-foreground">{selectedType?.label}</span>, atualize o seu plano para o <span className="font-semibold text-primary">PRO</span>.
+                </p>
+                <Button onClick={() => navigate("/app/planos")} className="w-full" variant="glow">
+                  Atualizar Plano
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={handleGenerate} disabled={isLoading} className="w-full" variant="glow">
+                {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Gerando...</> : `Gerar (${selectedType?.tokens}t)`}
+              </Button>
+            )}
           </CardContent>
         </Card>
 
