@@ -4,10 +4,10 @@ import { FileText, FileSpreadsheet, Presentation, Database, Loader2 } from "luci
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
@@ -19,6 +19,7 @@ const docTypes = [
 ];
 
 const CriarTrabalho = () => {
+  const { profile, refreshProfile } = useAuth();
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
@@ -29,7 +30,18 @@ const CriarTrabalho = () => {
   const selectedType = docTypes.find(d => d.value === docType);
 
   const handleGenerate = async () => {
-    if (!title || !subject) { toast.error("Preencha o título e a disciplina"); return; }
+    if (!title.trim()) { toast.error("Preencha o título do trabalho"); return; }
+    if (!subject.trim()) { toast.error("Preencha a disciplina"); return; }
+
+    const tokensNeeded = selectedType?.tokens ?? 20;
+    if (profile && profile.tokens < tokensNeeded) {
+      toast.error("Você não tem tokens suficientes.");
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { toast.error("Sessão expirada. Faça login novamente."); return; }
+
     setIsLoading(true);
     setResult("");
 
@@ -45,7 +57,7 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           messages: [{ role: "user", content: prompt }],
@@ -53,7 +65,12 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
         }),
       });
 
-      if (!resp.ok || !resp.body) throw new Error("Erro ao gerar trabalho");
+      if (!resp.ok) {
+        const errorData = await resp.json().catch(() => null);
+        throw new Error(errorData?.error || "Não foi possível gerar o trabalho. Tente novamente.");
+      }
+
+      if (!resp.body) throw new Error("Não foi possível gerar o trabalho. Tente novamente.");
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
@@ -81,9 +98,21 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
         }
       }
 
+      // Save work to database
+      if (content) {
+        await supabase.from("works").insert({
+          user_id: session.user.id,
+          title,
+          type: docType,
+          content,
+          tokens_used: tokensNeeded,
+        });
+      }
+
+      await refreshProfile();
       toast.success("Trabalho gerado com sucesso!");
     } catch (e: any) {
-      toast.error(e.message);
+      toast.error(e.message || "Não foi possível gerar o trabalho. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
