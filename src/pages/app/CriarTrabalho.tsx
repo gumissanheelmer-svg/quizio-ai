@@ -196,7 +196,7 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Resultado</CardTitle>
             {result && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   size="sm"
                   variant="outline"
@@ -223,6 +223,31 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
                 >
                   <Download className="w-4 h-4 mr-1" /> Baixar
                 </Button>
+                {isSaved ? (
+                  <Button size="sm" variant="outline" disabled className="text-green-500 border-green-500/30">
+                    <CheckCircle className="w-4 h-4 mr-1" /> Guardado
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      const { data: { session } } = await supabase.auth.getSession();
+                      if (!session) return;
+                      await supabase.from("works").insert({
+                        user_id: session.user.id,
+                        title,
+                        type: docType,
+                        content: result,
+                        tokens_used: selectedType?.tokens ?? 0,
+                      });
+                      setIsSaved(true);
+                      toast.success("Trabalho guardado!");
+                    }}
+                  >
+                    <Save className="w-4 h-4 mr-1" /> Guardar
+                  </Button>
+                )}
               </div>
             )}
           </CardHeader>
