@@ -139,21 +139,25 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
             <div className="space-y-2">
               <Label>Tipo de Documento</Label>
               <div className="grid grid-cols-2 gap-2">
-                {docTypes.map(d => (
-                  <button
-                    key={d.value}
-                    onClick={() => setDocType(d.value)}
-                    className={`flex items-center gap-2 p-3 rounded-lg border text-sm transition-colors ${
-                      docType === d.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <d.icon className="w-4 h-4" />
-                    <span>{d.label}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">{d.tokens}t</span>
-                  </button>
-                ))}
+                {docTypes.map(d => {
+                  const locked = isFree && d.value !== "word";
+                  return (
+                    <button
+                      key={d.value}
+                      onClick={() => setDocType(d.value)}
+                      className={`flex items-center gap-2 p-3 rounded-lg border text-sm transition-colors relative ${
+                        docType === d.value
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:border-primary/30"
+                      } ${locked ? "opacity-70" : ""}`}
+                    >
+                      <d.icon className="w-4 h-4" />
+                      <span>{d.label}</span>
+                      {locked && <Lock className="w-3 h-3 text-muted-foreground" />}
+                      <span className="ml-auto text-xs text-muted-foreground">{d.tokens}t</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div className="space-y-2">
