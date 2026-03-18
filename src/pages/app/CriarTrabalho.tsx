@@ -172,9 +172,20 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
               <Label>Instruções (opcional)</Label>
               <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Detalhes adicionais..." rows={3} />
             </div>
-            <Button onClick={handleGenerate} disabled={isLoading} className="w-full" variant="glow">
-              {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Gerando...</> : `Gerar (${selectedType?.tokens}t)`}
-            </Button>
+            {isLockedType ? (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Para gerar documentos em <span className="font-semibold text-foreground">{selectedType?.label}</span>, atualize o seu plano para o <span className="font-semibold text-primary">PRO</span>.
+                </p>
+                <Button onClick={() => navigate("/app/planos")} className="w-full" variant="glow">
+                  Atualizar Plano
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={handleGenerate} disabled={isLoading} className="w-full" variant="glow">
+                {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Gerando...</> : `Gerar (${selectedType?.tokens}t)`}
+              </Button>
+            )}
           </CardContent>
         </Card>
 
