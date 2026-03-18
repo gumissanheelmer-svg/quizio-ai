@@ -105,7 +105,7 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
         }
       }
 
-      // Save work to database
+      // Auto-save work to database
       if (content) {
         await supabase.from("works").insert({
           user_id: session.user.id,
@@ -114,10 +114,11 @@ Gere o conteúdo completo com: capa, índice, introdução, desenvolvimento, con
           content,
           tokens_used: tokensNeeded,
         });
+        setIsSaved(true);
       }
 
       await refreshProfile();
-      toast.success("Trabalho gerado com sucesso!");
+      toast.success("Trabalho gerado e guardado automaticamente!");
     } catch (e: any) {
       toast.error(e.message || "Não foi possível gerar o trabalho. Tente novamente.");
     } finally {
