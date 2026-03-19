@@ -318,7 +318,7 @@ serve(async (req) => {
 
         await supabase.rpc("debit_tokens", {
           p_user_id: user.id,
-          p_amount: TOKENS_PER_QUESTION,
+          p_amount: tokensNeeded,
           p_description: `AI Tutor - modo ${mode}`,
         });
 
