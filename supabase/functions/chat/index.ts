@@ -140,7 +140,16 @@ ADAPTAÇÕES OBRIGATÓRIAS:
 - Desafie o estudante com perguntas reflexivas`,
 };
 
-const TOKENS_PER_QUESTION = 5;
+const TOKENS_PER_MODE: Record<string, number> = {
+  professor: 5,
+  trabalho: 20,
+  resumo: 5,
+  simulado: 5,
+  "prova-amanha": 5,
+  "criar-imagem": 5,
+  upload: 5,
+  explicacao: 5,
+};
 
 async function generateTitle(firstMessage: string, apiKey: string): Promise<string> {
   try {
@@ -195,8 +204,10 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
-    if (!profile || profile.tokens < TOKENS_PER_QUESTION) {
-      return new Response(JSON.stringify({ error: "Tokens insuficientes. Você precisa de pelo menos 5 tokens." }), {
+    const tokensNeeded = TOKENS_PER_MODE[mode] || 5;
+
+    if (!profile || profile.tokens < tokensNeeded) {
+      return new Response(JSON.stringify({ error: `Tokens insuficientes. Você precisa de pelo menos ${tokensNeeded} tokens.` }), {
         status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -301,13 +312,13 @@ serve(async (req) => {
           role: "assistant",
           message: fullContent,
           mode,
-          tokens_used: TOKENS_PER_QUESTION,
+          tokens_used: tokensNeeded,
           ...(chat_id ? { chat_id } : {}),
         });
 
         await supabase.rpc("debit_tokens", {
           p_user_id: user.id,
-          p_amount: TOKENS_PER_QUESTION,
+          p_amount: tokensNeeded,
           p_description: `AI Tutor - modo ${mode}`,
         });
 
