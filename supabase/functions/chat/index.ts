@@ -200,7 +200,7 @@ serve(async (req) => {
     // Check tokens
     const { data: profile } = await supabase
       .from("profiles")
-      .select("tokens")
+      .select("tokens, learning_level, favorite_subjects, difficulties")
       .eq("user_id", user.id)
       .single();
 
