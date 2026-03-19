@@ -263,7 +263,18 @@ serve(async (req) => {
 - Se o estudante mencionar "isso", "aquilo", "esse tema", identifique a referência no histórico.
 - Mantenha coerência: não contradiga algo que você já explicou nesta conversa.`;
 
-    const systemPrompt = (modePrompts[mode] || modePrompts.professor) + (levelInstructions[learning_level] || levelInstructions.intermediate) + smartResponseRule + memoryRule;
+    // Build learner profile section from DB data
+    const userLevel = profile?.learning_level || learning_level || "intermediate";
+    const subjects = (profile?.favorite_subjects as string[] || []);
+    const diffs = (profile?.difficulties as string[] || []);
+    let learnerProfile = "";
+    if (subjects.length > 0 || diffs.length > 0) {
+      learnerProfile = `\n\nPERFIL DO ESTUDANTE:`;
+      if (subjects.length > 0) learnerProfile += `\n- Disciplinas favoritas: ${subjects.join(", ")}. Quando possível, use exemplos e analogias dessas áreas para facilitar o aprendizado.`;
+      if (diffs.length > 0) learnerProfile += `\n- Dificuldades relatadas: ${diffs.join(", ")}. Tenha paciência extra nesses temas, explique com mais detalhes e use abordagens alternativas.`;
+    }
+
+    const systemPrompt = (modePrompts[mode] || modePrompts.professor) + (levelInstructions[userLevel] || levelInstructions.intermediate) + smartResponseRule + memoryRule + learnerProfile;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
