@@ -312,7 +312,7 @@ serve(async (req) => {
           role: "assistant",
           message: fullContent,
           mode,
-          tokens_used: TOKENS_PER_QUESTION,
+          tokens_used: tokensNeeded,
           ...(chat_id ? { chat_id } : {}),
         });
 
