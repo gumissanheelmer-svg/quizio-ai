@@ -318,7 +318,7 @@ const AiTutor = () => {
       {/* Mobile drawer */}
       {isMobile && (
         <Drawer open={sidebarOpen} onOpenChange={setSidebarOpen} direction="left">
-          <DrawerContent className="h-full w-[280px] rounded-none border-r border-border fixed left-0 top-0 bottom-0">
+          <DrawerContent className="!h-full !w-[280px] !max-w-[80vw] !rounded-none !border-r border-border !inset-auto !fixed !left-0 !top-0 !bottom-0">
             <DrawerTitle className="sr-only">Conversas</DrawerTitle>
             {sidebarContent}
           </DrawerContent>
