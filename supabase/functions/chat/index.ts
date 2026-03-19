@@ -233,13 +233,37 @@ serve(async (req) => {
       });
     }
 
+    // --- Smart Memory: fetch last 20 messages from DB for reliable context ---
+    let contextMessages = messages;
+    if (chat_id) {
+      const { data: historyRows } = await supabase
+        .from("chat_messages")
+        .select("role, message")
+        .eq("chat_id", chat_id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (historyRows && historyRows.length > 0) {
+        contextMessages = historyRows
+          .reverse()
+          .map((m: any) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.message }));
+      }
+    }
+
     const smartResponseRule = `\n\nRESPOSTAS INTELIGENTES:
 - Para saudações simples (olá, oi, bom dia, boa tarde, boa noite, hello, hi, hey, e aí, tudo bem), responda de forma CURTA e amigável em 1-2 linhas com emoji. Exemplo: "Olá! 👋 Como posso ajudar você hoje?"
 - Para perguntas simples e diretas, responda de forma concisa e objetiva.
 - Para perguntas complexas ou que pedem explicações detalhadas, siga a estrutura completa do modo ativo.
 - NUNCA gere respostas longas para mensagens curtas de saudação ou cumprimento.`;
 
-    const systemPrompt = (modePrompts[mode] || modePrompts.professor) + (levelInstructions[learning_level] || levelInstructions.intermediate) + smartResponseRule;
+    const memoryRule = `\n\nMEMÓRIA DE CONTEXTO:
+- Você tem acesso ao histórico recente desta conversa. USE-O para manter continuidade.
+- NUNCA repita explicações já dadas. Se o estudante pede "dê exemplos", entenda que se refere ao último tema discutido.
+- Continue o raciocínio de onde parou. Se explicou teoria antes, agora foque em prática ou aprofundamento.
+- Se o estudante mencionar "isso", "aquilo", "esse tema", identifique a referência no histórico.
+- Mantenha coerência: não contradiga algo que você já explicou nesta conversa.`;
+
+    const systemPrompt = (modePrompts[mode] || modePrompts.professor) + (levelInstructions[learning_level] || levelInstructions.intermediate) + smartResponseRule + memoryRule;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -251,7 +275,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...contextMessages,
         ],
         stream: true,
       }),
