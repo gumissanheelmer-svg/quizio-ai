@@ -140,7 +140,16 @@ ADAPTAÇÕES OBRIGATÓRIAS:
 - Desafie o estudante com perguntas reflexivas`,
 };
 
-const TOKENS_PER_QUESTION = 5;
+const TOKENS_PER_MODE: Record<string, number> = {
+  professor: 5,
+  trabalho: 20,
+  resumo: 5,
+  simulado: 5,
+  "prova-amanha": 5,
+  "criar-imagem": 5,
+  upload: 5,
+  explicacao: 5,
+};
 
 async function generateTitle(firstMessage: string, apiKey: string): Promise<string> {
   try {
