@@ -142,6 +142,34 @@ ADAPTAÇÕES OBRIGATÓRIAS:
 
 const TOKENS_PER_QUESTION = 5;
 
+async function generateTitle(firstMessage: string, apiKey: string): Promise<string> {
+  try {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          {
+            role: "system",
+            content: "Gere um título curto (3-5 palavras) em português para uma conversa baseada nesta primeira mensagem. Responda APENAS com o título, sem aspas, sem explicação.",
+          },
+          { role: "user", content: firstMessage },
+        ],
+      }),
+    });
+    if (!resp.ok) return "Nova Conversa";
+    const data = await resp.json();
+    const title = data.choices?.[0]?.message?.content?.trim();
+    return title?.slice(0, 60) || "Nova Conversa";
+  } catch {
+    return "Nova Conversa";
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -153,13 +181,12 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get user from JWT
     const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { messages, mode = "professor", learning_level = "intermediate" } = await req.json();
+    const { messages, mode = "professor", learning_level = "intermediate", chat_id } = await req.json();
 
     // Check tokens
     const { data: profile } = await supabase
@@ -182,10 +209,18 @@ serve(async (req) => {
       message: lastUserMsg.content,
       mode,
       tokens_used: 0,
+      ...(chat_id ? { chat_id } : {}),
     });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // Auto-generate title for new sessions (first message)
+    if (chat_id && messages.length === 1) {
+      generateTitle(lastUserMsg.content, LOVABLE_API_KEY).then(async (title) => {
+        await supabase.from("chat_sessions").update({ title }).eq("id", chat_id);
+      });
+    }
 
     const smartResponseRule = `\n\nRESPOSTAS INTELIGENTES:
 - Para saudações simples (olá, oi, bom dia, boa tarde, boa noite, hello, hi, hey, e aí, tudo bem), responda de forma CURTA e amigável em 1-2 linhas com emoji. Exemplo: "Olá! 👋 Como posso ajudar você hoje?"
@@ -225,12 +260,9 @@ serve(async (req) => {
       });
     }
 
-    // We need to collect the full response to save it, while still streaming to client
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
-    const encoder = new TextEncoder();
 
-    // Process stream in background
     (async () => {
       const reader = response.body!.getReader();
       const decoder = new TextDecoder();
@@ -245,10 +277,8 @@ serve(async (req) => {
           const chunk = decoder.decode(value, { stream: true });
           buffer += chunk;
 
-          // Forward raw chunk to client
           await writer.write(value);
 
-          // Extract content for saving
           let newlineIndex: number;
           while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
             let line = buffer.slice(0, newlineIndex);
@@ -272,14 +302,19 @@ serve(async (req) => {
           message: fullContent,
           mode,
           tokens_used: TOKENS_PER_QUESTION,
+          ...(chat_id ? { chat_id } : {}),
         });
 
-        // Debit tokens using the secure function
         await supabase.rpc("debit_tokens", {
           p_user_id: user.id,
           p_amount: TOKENS_PER_QUESTION,
           p_description: `AI Tutor - modo ${mode}`,
         });
+
+        // Touch session updated_at
+        if (chat_id) {
+          await supabase.from("chat_sessions").update({ updated_at: new Date().toISOString() }).eq("id", chat_id);
+        }
       } catch (e) {
         console.error("Stream processing error:", e);
       } finally {
