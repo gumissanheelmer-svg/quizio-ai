@@ -155,6 +155,8 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          difficulties: string[] | null
+          favorite_subjects: string[] | null
           id: string
           learning_level: string
           name: string
@@ -171,6 +173,8 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          difficulties?: string[] | null
+          favorite_subjects?: string[] | null
           id?: string
           learning_level?: string
           name?: string
@@ -187,6 +191,8 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          difficulties?: string[] | null
+          favorite_subjects?: string[] | null
           id?: string
           learning_level?: string
           name?: string
