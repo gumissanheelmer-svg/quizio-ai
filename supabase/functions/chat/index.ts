@@ -204,8 +204,10 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
-    if (!profile || profile.tokens < TOKENS_PER_QUESTION) {
-      return new Response(JSON.stringify({ error: "Tokens insuficientes. Você precisa de pelo menos 5 tokens." }), {
+    const tokensNeeded = TOKENS_PER_MODE[mode] || 5;
+
+    if (!profile || profile.tokens < tokensNeeded) {
+      return new Response(JSON.stringify({ error: `Tokens insuficientes. Você precisa de pelo menos ${tokensNeeded} tokens.` }), {
         status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
